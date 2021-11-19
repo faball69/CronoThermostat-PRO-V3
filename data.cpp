@@ -13,8 +13,7 @@ bool saveData() {
   byte *p=(byte*)&plant;
   File file = SPIFFS.open("/plant", FILE_WRITE);
   if(!file) {
-    if(DEBUG)
-      Serial.println("An Error has occurred while opening /plant file");
+    println("An Error has occurred while opening /plant file");
     return false;
   }
   else {
@@ -27,8 +26,7 @@ bool saveData() {
 bool loadData() {
   byte *p=(byte*)&plant;
   if(!SPIFFS.begin(true)){
-    if(DEBUG)
-      Serial.println("An Error has occurred while mounting SPIFFS");
+    println("An Error has occurred while mounting SPIFFS");
     return false;
   }
   File file = SPIFFS.open("/plant", FILE_READ);
@@ -36,8 +34,7 @@ bool loadData() {
     saveData(); // no file we need to create it
   else {
     if(file.size()!=sizeof(plant)) {
-      if(DEBUG)
-        Serial.println("different size between file and struct....now update file!");
+      println("different size between file and struct....now update file!");
       saveData();
     }
     else

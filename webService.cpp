@@ -4,11 +4,11 @@
  * fabrizio . allevi @ tiscali . it
  */
 
+#include "main.h"
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
-#include "main.h"
 
 WebServer server(80);
 
@@ -34,10 +34,8 @@ void _handleRoot(const char *message) {
     "<html><body>\
     <script>if(typeof window.history.pushState == 'function') {window.history.pushState({}, \"Hide\", \"/\");}</script>\
     <h1>Plant%d</h1>\
-    <h2>Environment:</h2>\
-    <strong>Environment Temperature: </strong> %.1f <strong> Humidity: </strong> %.1f <strong> Time: </strong> %.02d:%.02d <br>\
-    <h2>States:</h2>\
-    <strong>heaterStatus: </strong> %s <strong>forceStatus: </strong> %s <strong> shellyMsg: </strong> %s <strong> debugMsg: </strong> %s <br><br>\
+    <strong>Temperature: </strong> %.1f <strong> Time: </strong> %.02d:%.02d <br>\
+    <strong>Heater: </strong> %s <strong>Force: </strong> %s <br><br>\
     <table style=\"border-collapse: collapse; width: 100%%;\" border=\"1\">\
     <tbody>\
     <tr>\
@@ -60,10 +58,11 @@ void _handleRoot(const char *message) {
     </tr>\
     </tbody>\
     </table>\
-    %s \
-    </body></html>\n", plant.nCh+1, ambT, ambH, timeNow.tm_hour, timeNow.tm_min, (state?"ON":"OFF"), (force?"ON":"OFF"), shellyMsg.c_str(), debugMsg.c_str(),
+    <br><strong> %s </strong><br>\
+    <br><strong> debugMsg: </strong> %s \
+    </body></html>\n", plant.nCh+1, ambT, timeNow.tm_hour, timeNow.tm_min, (state?"ON":"OFF"), (force?"ON":"OFF"),
                        plant.tOffset, plant.tLow, plant.tHigh, plant.tHyst, plant.minIni/60, plant.minIni%60, plant.minFin/60, plant.minFin%60, plant.nCh,
-                       (plant.bEnable?"ON":"OFF"), (plant.bEnable?"OFF":"ON"), message);
+                       (plant.bEnable?"ON":"OFF"), (plant.bEnable?"OFF":"ON"), message, debugMsg.c_str());
   server.send(200, "text/html", temp);
 }
 
@@ -94,7 +93,6 @@ void handlePlant() {
 }
 
 void handleSetPar() {
-  bool bRst=false;
   // for all pars
   // http://192.168.2.103/?PP1=10&PF1=28.0&TS1=14:00&TS2=14:00&PP2=5&PF2=0.5&TE1=20:00&TE2=20:00&E1=on&E2=on&E3=on&E4=on
   for(int i=0;i<server.args();i++) {
@@ -122,24 +120,18 @@ void handleSetPar() {
       int newInt=txtPar.toInt();
       if(newInt!=plant.nCh) {
         plant.nCh=newInt;
-        bRst=true;
+        firstLoop=true;
       }
     }
   }
   saveData();
-  if(bRst)
-    _handleRoot("Parameters saved...and now Reset to change channel!");
-  else
-    _handleRoot("Parameters saved!");
-  reset=bRst;
+  _handleRoot("Parameters saved!");
 }
 
 void initWeb() {
-  if(DEBUG) {
-    Serial.println("");
-    if (MDNS.begin("esp32")) {
-      Serial.println("MDNS responder started");
-    }
+  println("");
+  if (MDNS.begin("esp32")) {
+    println("MDNS responder started");
   }
   server.on("/", handleRoot);
   server.on("/get", handleSetPar);
@@ -148,8 +140,7 @@ void initWeb() {
   server.on("/plant", handlePlant);
   server.onNotFound(handleNotFound);
   server.begin();
-  if(DEBUG)
-   Serial.println("HTTP server started");
+  println("HTTP server started");
 }
 
  void handleWeb() {

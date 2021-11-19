@@ -12,15 +12,14 @@ bool scheduler() {
   bool bRet=false;
   if(plant.bEnable) {
     int minuteNow = timeNow.tm_hour*60+timeNow.tm_min;
-    if (DEBUG) {
-      Serial.print("minuteNow=");
-      Serial.println(minuteNow);
-    }
-    if(minuteNow>plant.minIni && minuteNow<plant.minFin) {  // temp high during day
-      if(ambT<plant.tHigh+plant.tHyst)
+    print("minuteNow="); println(minuteNow);
+    if(minuteNow>plant.minIni && minuteNow<plant.minFin) {
+      // temp high during day
+      if(ambT<=plant.tHigh-plant.tHyst || (state && ambT<plant.tHigh))
         bRet=true;
     }
-    if(ambT<plant.tLow+plant.tHyst)  // temp min with plant on
+    // temp min with plant on
+    if(ambT<=plant.tLow-plant.tHyst || (state && ambT<plant.tLow))
       bRet=true;
     if(force) { // force 30min
       if(minuteForceStart==0) {
