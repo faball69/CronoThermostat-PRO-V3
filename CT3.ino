@@ -11,7 +11,6 @@ bool state=false, reset=false, firstLoop=true;
 struct tm timeNow;
 long tLast=0;
 
-
 void setup() {
   if(serial==1) {
     // Open serial communications and wait for port to open:
@@ -26,10 +25,10 @@ void setup() {
   println("setup start!");
   loadData();
   initTemp();
+  initWifi();
   while(!updateNTP()) {
     delay(500);
   }
-  initWifi();
   initWebLog();
   initWeb();
 }
@@ -38,6 +37,8 @@ void loop() {
   long tNow=millis();
   if(tNow>tLast+5000 && reset)
     ESP.restart();
+  if(!handleWifi())
+    return;
   if(tNow>tLast+10000) {
     handleTemp(ambT);
     getLocalTime(&timeNow);
@@ -59,6 +60,5 @@ void loop() {
     }
     tLast=tNow;
   }
-  handleWifi();
   handleWeb();
 }

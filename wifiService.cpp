@@ -13,13 +13,19 @@
 #include "secret.h"
 
 void initWifi() {
-  //connect to WiFi
-  WiFi.disconnect();
-  delay(500);
-  // Access point enabled
-  WiFi.softAP(SSID_AP, PASS_AP);
-  print("\nAP IP address: ");
-  IPAddress ip=WiFi.softAPIP();
+  print("Connecting to network...");
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(SECRET_SSID_0, SECRET_PASS_0);
+  while(WiFi.status()!=WL_CONNECTED) {
+    print(".");
+    delay(1000);
+    blink();
+  }
+  stopBlink();
+  println("");
+  print(WiFi.SSID());
+  print(" IPaddr=");
+  IPAddress ip=WiFi.localIP();
   println(ip.toString());
   // OTA service
   ArduinoOTA
@@ -51,6 +57,19 @@ void initWifi() {
   return;
 }
 
-void handleWifi() {
-  ArduinoOTA.handle();
+long tWiFi=0;
+bool handleWifi() {
+  // if WiFi is down, try reconnecting
+  if(WiFi.status()!=WL_CONNECTED) {
+    long tNow=millis();
+    if(tNow-tWiFi>=30000) {
+      WiFi.disconnect();
+      WiFi.reconnect();
+      tWiFi=tNow;
+    }
+    return false;
+  }
+  else
+    ArduinoOTA.handle();
+  return true;
 }

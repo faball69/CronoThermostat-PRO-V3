@@ -15,8 +15,10 @@
 bool updateNTP();
 bool turn(bool state);
 bool scheduler();
+void APinitWifi();
+void APhandleWifi();
 void initWifi();
-void handleWifi();
+bool handleWifi();
 void initWebLog();
 void initWeb();
 void handleWeb();
