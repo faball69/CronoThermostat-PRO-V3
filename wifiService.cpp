@@ -26,7 +26,11 @@ void initWifi() {
   print(WiFi.SSID());
   print(" IPaddr=");
   IPAddress ip=WiFi.localIP();
-  println(ip.toString());
+  print(ip.toString());
+  print(" RSSI=");
+  long rssi = WiFi.RSSI();
+  print((int)rssi);
+  println("dBm");
   // OTA service
   ArduinoOTA
       .onStart([]() {
