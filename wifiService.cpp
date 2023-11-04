@@ -12,10 +12,19 @@
 #include "main.h"
 #include "secret.h"
 
+struct Network {
+  const char *name;
+  const char *psw;
+} networks[MAX_NETWORKS]={
+  {SECRET_SSID_0, SECRET_PASS_0},
+  {SECRET_SSID_1, SECRET_PASS_1},
+  {SECRET_SSID_2, SECRET_PASS_2},
+};
+
 void initWifi() {
   print("Connecting to network...");
   WiFi.mode(WIFI_STA);
-  WiFi.begin(SECRET_SSID_0, SECRET_PASS_0);
+  WiFi.begin(networks[plant.nNet].name, networks[plant.nNet].psw);
   while(WiFi.status()!=WL_CONNECTED) {
     print(".");
     delay(1000);

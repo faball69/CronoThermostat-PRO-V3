@@ -7,7 +7,7 @@
 #include "main.h"
 #include <SPIFFS.h>
 
-stPlant plant = {true, 0.0, 19.0, 20.8, 0.2, 7*60, 22*60, -1};
+stPlant plant = {true, 0.0, 19.0, 20.8, 0.2, 7*60, 22*60, -1, 0};
 
 bool saveData() {
   byte *p=(byte*)&plant;

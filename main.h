@@ -37,12 +37,13 @@ struct stPlant {
   int minIni;
   int minFin;
   int nCh;
+  int nNet;
 };
 extern stPlant plant;
 extern struct tm timeNow;
 extern float ambT;
 extern String debugMsg;
-extern bool state, reset, force, firstLoop;
+extern bool state, reset, force;
 
 void blink();
 void stopBlink();

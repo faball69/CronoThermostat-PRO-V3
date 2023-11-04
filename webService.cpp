@@ -8,7 +8,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
-#include <ESPmDNS.h>
+//#include <ESPmDNS.h>
 
 WebServer server(80);
 
@@ -43,15 +43,16 @@ void _handleRoot(const char *message) {
     <form action=\"/get\">\
       offset[deg]:<input min=\"-7.0\" max=\"7.0\" name=\"PF1\" step=\"0.1\" type=\"number\" value=\"%.1f\" /><br><br>\
       tempLow[deg]:<input min=\"15.0\" max=\"20.0\" name=\"PF2\" step=\"0.1\" type=\"number\" value=\"%.1f\" /><br><br>\
-      TempHigh[deg]:<input min=\"15.0\" max=\"23.0\" name=\"PF3\" step=\"0.1\" type=\"number\" value=\"%.1f\" /><br><br>\
-      Hysteresis[deg]:<input min=\"0.0\" max=\"0.5\" name=\"PF4\" step=\"0.1\" type=\"number\" value=\"%.1f\" /><br><br>\
+      tempHigh[deg]:<input min=\"15.0\" max=\"23.0\" name=\"PF3\" step=\"0.1\" type=\"number\" value=\"%.1f\" /><br><br>\
+      hysteresis[deg]:<input min=\"0.0\" max=\"0.5\" name=\"PF4\" step=\"0.1\" type=\"number\" value=\"%.1f\" /><br><br>\
       timeStart[hh:mm]:<input type=\"time\" name=\"TS\" value=\"%.02d:%.02d\" /><br><br>\
       timeEnd[hh:mm]:<input type=\"time\" name=\"TE\" value=\"%.02d:%.02d\" /><br><br>\
-      nCh:<input min=\"-1\" max=\"1\" type=\"number\" name=\"CH\" value=\"%d\" /> -1=APmode 0=Heater1 1=Heater2<br><br><br>\
+      nCh:<input min=\"-1\" max=\"1\" type=\"number\" name=\"CH\" value=\"%d\" /> -1=APmode 0=Heater1 1=Heater2<br><br>\
+      nNET:<input min=\"0\" max=\"2\" type=\"number\" name=\"NET\" value=\"%d\" /> 0=Fastweb 1=TPL 2=Sitecom<br><br><br>\
     <input type=submit value=Save>Parameters</form><br>\
     </td>\
     <td style=\"width: 12.5%%;\">\
-    <form action=\"/force\"><input type=submit value=Force>heater ON for 30min from now!</form><br><br><br>\
+    <form action=\"/force\"><input type=submit value=Force>heater %s for 30min from now!</form><br><br><br>\
     <form action=\"/reset\"><input type=submit value=Reset>ESP32 Board to restart! Pay Attention!</form><br><br><br>\
     <form action=\"/plant\">now Plant is %s <input type=submit value=Turn%s></form>\
     </td>\
@@ -61,8 +62,8 @@ void _handleRoot(const char *message) {
     <br><strong> %s </strong><br>\
     <br><strong> debugMsg: </strong> %s \
     </body></html>\n", plant.nCh+1, ambT, timeNow.tm_hour, timeNow.tm_min, (state?"ON":"OFF"), (force?"ON":"OFF"),
-                       plant.tOffset, plant.tLow, plant.tHigh, plant.tHyst, plant.minIni/60, plant.minIni%60, plant.minFin/60, plant.minFin%60, plant.nCh,
-                       (plant.bEnable?"ON":"OFF"), (plant.bEnable?"OFF":"ON"), message, debugMsg.c_str());
+                       plant.tOffset, plant.tLow, plant.tHigh, plant.tHyst, plant.minIni/60, plant.minIni%60, plant.minFin/60, plant.minFin%60, plant.nCh, plant.nNet,
+                       (force?"OFF":"ON"), (plant.bEnable?"ON":"OFF"), (plant.bEnable?"OFF":"ON"), message, debugMsg.c_str());
   server.send(200, "text/html", temp);
 }
 
@@ -76,9 +77,9 @@ void handleReset() {
 }
 
 void handleForce() {
-  _handleRoot("Force heater ON for 30min!");
+  _handleRoot("Force heater ON/OFF for 30min!");
   if(plant.bEnable)
-    force=true;
+    force=!force;
 }
 
 void handlePlant() {
@@ -120,7 +121,15 @@ void handleSetPar() {
       int newInt=txtPar.toInt();
       if(newInt!=plant.nCh) {
         plant.nCh=newInt;
-        firstLoop=true;
+        reset=true;
+      }
+    }
+    txtPar=server.arg("NET");
+    if(txtPar!="") {
+      int newNet=txtPar.toInt();
+      if(newNet!=plant.nNet) {
+        plant.nNet=newNet;
+        reset=true;
       }
     }
   }
@@ -129,10 +138,10 @@ void handleSetPar() {
 }
 
 void initWeb() {
-  println("");
+  /*println("");
   if (MDNS.begin("esp32")) {
     println("MDNS responder started");
-  }
+  }*/
   server.on("/", handleRoot);
   server.on("/get", handleSetPar);
   server.on("/force", handleForce);
